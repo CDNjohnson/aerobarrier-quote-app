@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroBarrier West — Quote Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --navy:#0f2a4a; --navy-dark:#0a1d33; --accent:#1f8ecd; --accent-dark:#146a9c;
+    --bg:#f4f7fa; --card:#ffffff; --border:#dbe3ec; --text:#1c2b3a; --muted:#5c7086;
+    --good:#2e8b57; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  header.top{background:linear-gradient(135deg,var(--navy),var(--navy-dark));color:#fff;padding:22px 28px;}
+  header.top h1{margin:0;font-size:1.5rem;font-weight:700;letter-spacing:.2px;}
+  header.top p{margin:4px 0 0;color:#b9cbe0;font-size:.88rem;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px;}
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 2px rgba(20,40,60,.04);}
+  .card h2{margin:0 0 14px;font-size:1.05rem;color:var(--navy);border-bottom:2px solid var(--accent);padding-bottom:8px;}
+  .card h3{margin:18px 0 10px;font-size:.92rem;color:var(--navy);}
+  label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+  input,select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:.92rem;background:#fff;color:var(--text);}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 16px;}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px 16px;}
+  .field{margin-bottom:12px;}
+  table.units{width:100%;border-collapse:collapse;margin-top:6px;font-size:.85rem;}
+  table.units th{background:#eef3f8;color:var(--navy);text-align:left;padding:6px 8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border);}
+  table.units td{padding:5px 6px;border-bottom:1px solid #eef1f5;}
+  table.units input{padding:6px 8px;font-size:.85rem;}
+  table.units td.remove{text-align:center;width:34px;}
+  .btn{cursor:pointer;border:none;border-radius:7px;padding:9px 16px;font-size:.88rem;font-weight:600;transition:.15s;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{background:var(--accent-dark);}
+  .btn-ghost{background:#eef3f8;color:var(--navy);}
+  .btn-ghost:hover{background:#e2ebf3;}
+  .btn-remove{background:#fbe7e7;color:#a3352f;padding:4px 9px;font-size:.78rem;}
+  .btn-big{width:100%;padding:14px;font-size:1rem;}
+  .radio-row{display:flex;gap:14px;margin-top:4px;}
+  .radio-row label{display:flex;align-items:center;gap:6px;font-size:.85rem;text-transform:none;font-weight:500;color:var(--text);}
+  .radio-row input{width:auto;}
+  .summary-card{position:sticky;top:16px;}
+  .summary-line{display:flex;justify-content:space-between;font-size:.86rem;padding:6px 0;border-bottom:1px dashed var(--border);}
+  .summary-line.total{font-size:1.05rem;font-weight:700;color:var(--navy);border-bottom:none;border-top:2px solid var(--accent);padding-top:10px;margin-top:6px;}
+  .muted{color:var(--muted);font-size:.78rem;}
+  .note{background:#fff8e6;border:1px solid #f0dfa8;color:#7a5c00;font-size:.78rem;padding:8px 10px;border-radius:6px;margin-top:10px;}
+  .pill{display:inline-block;background:#eaf6ee;color:var(--good);font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:8px;}
+  footer.sig{text-align:center;color:var(--muted);font-size:.75rem;padding:20px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>AeroBarrier West — Quote Builder</h1>
+  <p>Fill in the fields below, review the calculated total, then download a client-ready PDF quote.</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <label for="quoteType">Quote Type</label>
+    <select id="quoteType">
+      <option value="sf">Single Family Quote</option>
+      <option value="mf">Multi-Family Quote</option>
+      <option value="abas_sf">ABAS Single Family Quote (Air Sealing + AeroSeal)</option>
+      <option value="abas_mf">ABAS Multi-Family Quote (Air Sealing + AeroSeal)</option>
+      <option value="aeroseal_sf">AeroSeal Single Family Quote</option>
+      <option value="aeroseal_mf">AeroSeal Multi-Family Quote</option>
+    </select>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2>Job Details</h2>
+        <div class="grid2">
+          <div class="field"><label>Client</label><input id="f_client" placeholder="Client name"></div>
+          <div class="field"><label>Project</label><input id="f_project" placeholder="Project name"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Job Address</label><input id="f_address" placeholder="Street, City, State"></div>
+          <div class="field"><label>Date</label><input id="f_date" type="date"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Construction Stage</label>
+            <select id="f_stage"><option>Framing</option><option selected>Finished Drywall</option></select>
+          </div>
+          <div class="field" id="f_secondaryFieldWrap"><label>Time at Job</label><input id="f_secondary" placeholder="e.g. 2-Days"></div>
+        </div>
+      </div>
+
+      <div class="card" id="pricingCard">
+        <h2 id="pricingTitle">Pricing</h2>
+        <div id="pricingBody"></div>
+      </div>
+
+      <div class="card">
+        <h2>Mobilization to Site <span class="pill">auto-calculated</span></h2>
+        <h3>Additional Prep Add-Ons</h3>
+        <div class="grid3">
+          <div class="field"><label>Prep Bathrooms (qty)</label><input type="number" min="0" id="t_bath" value="0"></div>
+          <div class="field"><label>Cabinets (qty)</label><input type="number" min="0" id="t_cab" value="0"></div>
+          <div class="field"><label>Stairs (qty)</label><input type="number" min="0" id="t_stairs" value="0"></div>
+          <div class="field"><label>Finished Flooring (qty)</label><input type="number" min="0" id="t_floor" value="0"></div>
+          <div class="field"><label>Missing Windows (qty)</label><input type="number" min="0" id="t_win" value="0"></div>
+          <div class="field"><label>Missing Doors (qty)</label><input type="number" min="0" id="t_door" value="0"></div>
+        </div>
+        <h3>Overnight Travel</h3>
+        <div class="grid4">
+          <div class="field"><label>In-State Nights</label><input type="number" min="0" id="t_inNights" value="0"></div>
+          <div class="field"><label>In-State Employees</label><input type="number" min="0" id="t_inEmp" value="0"></div>
+          <div class="field"><label>Out-of-State Nights</label><input type="number" min="0" id="t_outNights" value="0"></div>
+          <div class="field"><label>Out-of-State Employees</label><input type="number" min="0" id="t_outEmp" value="0"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Per Diem — Days</label><input type="number" min="0" id="t_diemDays" value="0"></div>
+          <div class="field"><label>Per Diem — People</label><input type="number" min="0" id="t_diemPeople" value="0"></div>
+        </div>
+        <h3>Long Distance Fuel Surcharge</h3>
+        <div class="grid2">
+          <div class="field"><label>Roundtrip Miles</label><input type="number" min="0" id="t_miles" value="0"></div>
+          <div class="field"><label># of Trips</label><input type="number" min="0" id="t_trips" value="0"></div>
+        </div>
+        <p class="muted">Rates: Prep Bath/Cab/Windows $150 · Stairs $200 · Flooring/Doors $300 · In-state stay $200/night · Out-of-state stay $300/night (×2 rate if 3+ employees traveling) · Per diem $40/person/day · Fuel $1.607/mile.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card summary-card">
+        <h2>Quote Summary</h2>
+        <div id="summaryBody"></div>
+        <button class="btn btn-accent btn-big" id="downloadBtn" style="margin-top:16px;">Download PDF Quote</button>
+        <p class="muted" style="margin-top:10px;">The PDF includes job details, line items, and totals — ready to send to the client.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="sig">AeroBarrier West · 20 S Main Suite 1428, Bountiful, UT 84011 · bids@aerobarrierwest.com · (385) 343-9423</footer>
+
+<script>
+/* ---------- Rate constants (pulled directly from the Pricing Data / Travel & Add Ons / Cost Data sheets) ---------- */
+const RATES = {
+  sfCode: 1.95,          // Pricing Data!G9  — SF Code 3ACH50
+  sfHighPerf: 2.35,      // Pricing Data!G10 — SF High Performance 1-1.5 ACH
+  mfUnit: 0.99,          // Multi-Family Quote hardcodes 0.99 $/sqft per unit regardless of tier (matches source formula)
+  aeroSF_wAB: 1500,      // Pricing Data!N5  — SF AeroSeal w/ AeroBarrier, 1 system
+  aeroSF_onlyFirst: 3500,// Pricing Data!P5  — SF AeroSeal ONLY, 1st system
+  aeroSF_extra: 1500,    // Pricing Data!Q5  — SF AeroSeal extra systems
+  aeroMF_wAB: 500,       // Pricing Data!J5  — MF Apartments AeroSeal w/ AeroBarrier
+  aeroMF_only: 1000,     // Pricing Data!K5  — MF Apartments AeroSeal ONLY
+  prep: {bath:150, cab:150, stairs:200, floor:300, win:150, door:300},
+  overnightIn: 200, overnightOut: 300, perDiem: 40,
+  perMile: 112.5/70      // Cost Data!G32 — 1.607142857
+};
+
+const TYPE_LABELS = {
+  sf: "Single Family Quote", mf: "Multi-Family Quote",
+  abas_sf: "ABAS Single Family Quote", abas_mf: "ABAS Multi-Family Quote",
+  aeroseal_sf: "AeroSeal Single Family Quote", aeroseal_mf: "AeroSeal Multi-Family Quote"
+};
+
+let unitRows = { mf: [], abas_mf: [] }; // dynamic per-unit tables for multi-family variants
+let unitRowId = 0;
+
+function fmt(n){ return "$" + (Math.round((n + Number.EPSILON) * 100) / 100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function num(id){ const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+function val(id){ const el = document.getElementById(id); return el ? el.value : ""; }
+
+function mobilizationTotal(){
+  const prep = num('t_bath')*RATES.prep.bath + num('t_cab')*RATES.prep.cab + num('t_stairs')*RATES.prep.stairs +
+               num('t_floor')*RATES.prep.floor + num('t_win')*RATES.prep.win + num('t_door')*RATES.prep.door;
+  const inStay  = num('t_inNights')  * RATES.overnightIn  * (num('t_inEmp')  < 3 ? 1 : 2);
+  const outStay = num('t_outNights') * RATES.overnightOut * (num('t_outEmp') < 3 ? 1 : 2);
+  const perDiem = num('t_diemDays') * num('t_diemPeople') * RATES.perDiem;
+  const fuel = num('t_miles') * RATES.perMile * num('t_trips');
+  return prep + inStay + outStay + perDiem + fuel;
+}
+
+/* ---------- Per-quote-type field rendering ---------- */
+function unitTableHTML(key){
+  const rows = unitRows[key];
+  let body = rows.map(r => `
+    <tr data-id="${r.id}">
+      <td><input type="text" class="u-type" value="${r.type}"></td>
+      <td><input type="number" min="0" class="u-count" value="${r.count}"></td>
+      <td><input type="number" min="0" class="u-sqft" value="${r.sqft}"></td>
+      <td class="u-total muted"></td>
+      <td class="remove"><button class="btn btn-remove" onclick="removeUnitRow('${key}', ${r.id})">✕</button></td>
+    </tr>`).join("");
+  return `
+    <table class="units">
+      <thead><tr><th>Unit Type</th><th>Unit Count</th><th>Sq Ft / Unit</th><th>Total Price</th><th></th></tr></thead>
+      <tbody id="unitBody_${key}">${body}</tbody>
+    </table>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="addUnitRow('${key}')">+ Add Unit Row</button>
+    <p class="muted" style="margin-top:6px;">Price/Unit = Sq Ft × $0.99 (matches the spreadsheet's per-unit rate).</p>`;
+}
+function addUnitRow(key){ unitRows[key].push({id: ++unitRowId, type:"Unit", count:1, sqft:200}); renderPricing(); }
+function removeUnitRow(key, id){ unitRows[key] = unitRows[key].filter(r=>r.id!==id); renderPricing(); }
+
+function renderPricing(){
+  const type = val('quoteType');
+  const secWrap = document.getElementById('f_secondaryFieldWrap');
+  const body = document.getElementById('pricingBody');
+  const title = document.getElementById('pricingTitle');
+
+  if (type === 'sf' || type === 'abas_sf' || type === 'aeroseal_sf'){
+    secWrap.innerHTML = `<label>Time at Job</label><input id="f_secondary" placeholder="e.g. 2-Days">`;
+  } else {
+    secWrap.innerHTML = `<label>Miles Round Trip (site)</label><input type="number" min="0" id="f_secondary" placeholder="0">`;
+  }
+
+  if (type === 'sf'){
+    title.textContent = "Air Sealing Pricing";
+    body.innerHTML = `
+      <div class="field"><label>Total Sq Ft</label><input type="number" min="0" id="p_sqft" value="2200"></div>
+      <div class="grid2">
+        <div><label>Tightness Option</label>
+          <div class="radio-row">
+            <label><input type="radio" name="p_tier" value="code" checked> CODE (3.0 ACH50)</label>
+            <label><input type="radio" name="p_tier" value="hp"> High Performance (1-2 ACH50)</label>
+          </div>
+        </div>
+      </div>
+      <div class="note">Both tiers are priced below — the selected radio determines the "Project Total" carried into the PDF.</div>`;
+  }
+  else if (type === 'mf'){
+    title.textContent = "Air Sealing Pricing — Per Unit";
+    if (unitRows.mf.length === 0) unitRows.mf.push({id: ++unitRowId, type:"Unit", count:1, sqft:200});
+    body.innerHTML = unitTableHTML('mf');
+  }
+  else if (type === 'abas_sf'){
+    title.textContent = "Air Sealing + AeroSeal Duct Sealing Pricing";
+    body.innerHTML = `
+      <div class="field"><label>Total Sq Ft</label><input type="number" min="0" id="p_sqft" value="2200"></div>
+      <div class="radio-row">
+        <label><input type="radio" name="p_tier" value="code" checked> CODE (3.0 ACH50)</label>
+        <label><input type="radio" name="p_tier" value="hp"> High Performance (1-2 ACH50)</label>
+      </div>
+      <h3>AeroSeal Duct Sealing</h3>
+      <div class="field"><label>Systems (qty)</label><input type="number" min="0" id="p_systems" value="1"></div>
+      <div class="note">AeroSeal system rate: $${RATES.aeroSF_wAB}/system (w/ AeroBarrier air sealing).</div>`;
+  }
+  else if (type === 'abas_mf'){
+    title.textContent = "Air Sealing + AeroSeal Duct Sealing Pricing — Per Unit";
+    if (unitRows.abas_mf.length === 0) unitRows.abas_mf.push({id: ++unitRowId, type:"Unit", count:1, sqft:200});
+    body.innerHTML = unitTableHTML('abas_mf') + `
+      <div class="note" style="margin-top:14px;">AeroSeal Duct Sealing is auto-calculated: Total Units (sum of unit counts above) × $${RATES.aeroMF_wAB}/unit.</div>`;
+  }
+  else if (type === 'aeroseal_sf'){
+    title.textContent = "AeroSeal Duct Sealing Pricing";
+    body.innerHTML = `
+      <div class="field"><label>Extra Systems (qty beyond the 1st)</label><input type="number" min="0" id="p_extra" value="0"></div>
+      <div class="note">1st System: $${RATES.aeroSF_onlyFirst} flat · Extra Systems: $${RATES.aeroSF_extra} each.</div>`;
+  }
+  else if (type === 'aeroseal_mf'){
+    title.textContent = "AeroSeal Duct Sealing Pricing — Multi-Family";
+    body.innerHTML = `
+      <div class="field"><label>Total Units</label><input type="number" min="0" id="p_units" value="1"></div>
+      <div class="note">Rate: $${RATES.aeroMF_only}/unit (AeroSeal only, no air sealing).</div>`;
+  }
+  attachListeners();
+  syncUnitRowValues();
+  recalc();
+}
+
+function attachListeners(){
+  document.querySelectorAll('#pricingBody input, #pricingBody select').forEach(el=>{
+    el.oninput = ()=>{ syncUnitRowValues(); recalc(); };
+  });
+}
+function syncUnitRowValues(){
+  ['mf','abas_mf'].forEach(key=>{
+    const tbody = document.getElementById('unitBody_'+key);
+    if(!tbody) return;
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const id = parseInt(tr.dataset.id,10);
+      const row = unitRows[key].find(r=>r.id===id);
+      if(!row) return;
+      row.type = tr.querySelector('.u-type').value;
+      row.count = parseFloat(tr.querySelector('.u-count').value) || 0;
+      row.sqft = parseFloat(tr.querySelector('.u-sqft').value) || 0;
+    });
+  });
+}
+
+/* ---------- Core calculation per type — mirrors the workbook formulas ---------- */
+function computeQuote(){
+  const type = val('quoteType');
+  const mob = mobilizationTotal();
+  let lineItems = [];
+  let subtotal = 0;
+  let selectedLabel = "";
+
+  if (type === 'sf'){
+    const sqft = num('p_sqft');
+    const codeTotal = sqft * RATES.sfCode;
+    const hpTotal = sqft * RATES.sfHighPerf;
+    const tier = document.querySelector('input[name="p_tier"]:checked')?.value || 'code';
+    lineItems.push(["CODE (3.0 ACH50)", sqft+" sqft", fmt(codeTotal)]);
+    lineItems.push(["High Performance (1-2 ACH50)", sqft+" sqft", fmt(hpTotal)]);
+    subtotal = tier === 'code' ? codeTotal : hpTotal;
+    selectedLabel = tier === 'code' ? "CODE (3.0 ACH50)" : "High Performance (1-2 ACH50)";
+  }
+  else if (type === 'mf'){
+    let unitTotal = 0, sqTotal = 0, countTotal = 0;
+    const tbody = document.getElementById('unitBody_mf');
+    unitRows.mf.forEach(r=>{
+      const total = r.sqft * RATES.mfUnit * r.count;
+      unitTotal += total; sqTotal += r.sqft*r.count; countTotal += r.count;
+      lineItems.push([r.type, `${r.count} units × ${r.sqft} sqft`, fmt(total)]);
+    });
+    if(tbody){ [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+      const r = unitRows.mf[i]; if(!r) return;
+      tr.querySelector('.u-total').textContent = fmt(r.sqft*RATES.mfUnit*r.count);
+    });}
+    subtotal = unitTotal;
+    selectedLabel = `${countTotal} total units, ${sqTotal.toLocaleString()} total sqft`;
+  }
+  else if (type === 'abas_sf'){
+    const sqft = num('p_sqft');
+    const tier = document.querySelector('input[name="p_tier"]:checked')?.value || 'code';
+    const airTotal = sqft * (tier==='code' ? RATES.sfCode : RATES.sfHighPerf);
+    const systems = num('p_systems');
+    const aeroTotal = systems * RATES.aeroSF_wAB;
+    lineItems.push(["Air Sealing — " + (tier==='code'?"CODE":"High Performance"), sqft+" sqft", fmt(airTotal)]);
+    lineItems.push(["AeroSeal Duct Sealing", systems+" system(s)", fmt(aeroTotal)]);
+    subtotal = airTotal + aeroTotal;
+    selectedLabel = tier === 'code' ? "CODE (3.0 ACH50)" : "High Performance (1-2 ACH50)";
+  }
+  else if (type === 'abas_mf'){
+    let unitTotal = 0, countTotal = 0;
+    const tbody = document.getElementById('unitBody_abas_mf');
+    unitRows.abas_mf.forEach(r=>{
+      const total = r.sqft * RATES.mfUnit * r.count;
+      unitTotal += total; countTotal += r.count;
+      lineItems.push([r.type, `${r.count} units × ${r.sqft} sqft`, fmt(total)]);
+    });
+    if(tbody){ [...tbody.querySelectorAll('tr')].forEach((tr,i)=>{
+      const r = unitRows.abas_mf[i]; if(!r) return;
+      tr.querySelector('.u-total').textContent = fmt(r.sqft*RATES.mfUnit*r.count);
+    });}
+    const aeroTotal = countTotal * RATES.aeroMF_wAB;
+    lineItems.push(["AeroSeal Duct Sealing", countTotal+" units", fmt(aeroTotal)]);
+    subtotal = unitTotal + aeroTotal;
+    selectedLabel = `${countTotal} total units`;
+  }
+  else if (type === 'aeroseal_sf'){
+    const extra = num('p_extra');
+    const total = RATES.aeroSF_onlyFirst + extra*RATES.aeroSF_extra;
+    lineItems.push(["1st System", "1", fmt(RATES.aeroSF_onlyFirst)]);
+    lineItems.push(["Extra Systems", extra, fmt(extra*RATES.aeroSF_extra)]);
+    subtotal = total;
+  }
+  else if (type === 'aeroseal_mf'){
+    const units = num('p_units');
+    const total = units * RATES.aeroMF_only;
+    lineItems.push(["AeroSeal Duct Sealing", units+" units", fmt(total)]);
+    subtotal = total;
+  }
+
+  return { type, lineItems, subtotal, mob, grandTotal: subtotal + mob, selectedLabel };
+}
+
+function recalc(){
+  const q = computeQuote();
+  const s = document.getElementById('summaryBody');
+  let rows = q.lineItems.map(li => `<div class="summary-line"><span>${li[0]}</span><span>${li[2]}</span></div>`).join("");
+  s.innerHTML = `
+    ${rows}
+    <div class="summary-line"><span>Mobilization to Site</span><span>${fmt(q.mob)}</span></div>
+    <div class="summary-line total"><span>Project Total${q.selectedLabel ? " ("+q.selectedLabel+")" : ""}</span><span>${fmt(q.grandTotal)}</span></div>
+  `;
+}
+
+/* ---------- PDF generation ---------- */
+function downloadPDF(){
+  const q = computeQuote();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt", format:"letter"});
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let y = 50;
+
+  doc.setFillColor(15,42,74);
+  doc.rect(0,0,pageWidth,70,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18); doc.setFont(undefined,'bold');
+  doc.text("AeroBarrier West", 40, 30);
+  doc.setFontSize(9); doc.setFont(undefined,'normal');
+  doc.text("20 S Main Suite 1428, Bountiful, UT 84011  •  bids@aerobarrierwest.com  •  (385) 343-9423", 40, 46);
+  doc.text(TYPE_LABELS[q.type], 40, 60);
+
+  y = 95;
+  doc.setTextColor(28,43,58);
+  doc.setFontSize(12); doc.setFont(undefined,'bold');
+  doc.text("Job Details", 40, y); y += 8;
+  doc.setDrawColor(31,142,205); doc.line(40,y,pageWidth-40,y); y += 18;
+
+  doc.setFontSize(10); doc.setFont(undefined,'normal');
+  const jobDetails = [
+    ["Client", val('f_client') || "—"],
+    ["Project", val('f_project') || "—"],
+    ["Job Address", val('f_address') || "—"],
+    ["Date", val('f_date') || new Date().toLocaleDateString()],
+    ["Construction Stage", val('f_stage') || "—"],
+    [ (q.type==='sf'||q.type==='abas_sf'||q.type==='aeroseal_sf') ? "Time at Job" : "Miles Round Trip", val('f_secondary') || "—" ]
+  ];
+  jobDetails.forEach(([label, value])=>{
+    doc.setFont(undefined,'bold'); doc.text(label+":", 40, y);
+    doc.setFont(undefined,'normal'); doc.text(String(value), 170, y);
+    y += 16;
+  });
+
+  y += 10;
+  doc.autoTable({
+    startY: y,
+    head: [["Line Item", "Detail", "Amount"]],
+    body: q.lineItems.map(li => [li[0], String(li[1]), li[2]]),
+    theme: 'grid',
+    headStyles: { fillColor: [15,42,74], textColor: 255, fontSize: 10 },
+    styles: { fontSize: 10, cellPadding: 6 },
+    margin: { left: 40, right: 40 }
+  });
+
+  let finalY = doc.lastAutoTable.finalY + 20;
+  doc.setFontSize(10);
+  doc.text("Mobilization to Site:", 320, finalY); doc.text(fmt(q.mob), pageWidth-40, finalY, {align:'right'});
+  finalY += 20;
+  doc.setDrawColor(31,142,205); doc.line(320, finalY-14, pageWidth-40, finalY-14);
+  doc.setFont(undefined,'bold'); doc.setFontSize(13);
+  doc.text("Project Total" + (q.selectedLabel ? " ("+q.selectedLabel+")" : "") + ":", 320, finalY);
+  doc.text(fmt(q.grandTotal), pageWidth-40, finalY, {align:'right'});
+
+  finalY += 40;
+  doc.setFont(undefined,'normal'); doc.setFontSize(8); doc.setTextColor(120,120,120);
+  doc.text("Quote generated " + new Date().toLocaleString() + ". Prices subject to final site inspection.", 40, finalY);
+
+  const clientName = (val('f_client') || "quote").replace(/[^a-z0-9]/gi,'_');
+  doc.save(`AeroBarrier_${TYPE_LABELS[q.type].replace(/\s+/g,'_')}_${clientName}.pdf`);
+}
+
+/* ---------- Init ---------- */
+document.getElementById('quoteType').addEventListener('change', renderPricing);
+document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+document.querySelectorAll('.card input, .card select').forEach(el=>{ el.addEventListener('input', recalc); });
+document.getElementById('f_date').valueAsDate = new Date();
+renderPricing();
+</script>
+</body>
+</html>
